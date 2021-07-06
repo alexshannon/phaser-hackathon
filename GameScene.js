@@ -3,12 +3,10 @@ class GameScene extends Phaser.Scene {
 		super( {key: 'GameScene'} )
 	}
     preload(){
-        this.load.image('codey', 'https://content.codecademy.com/courses/learn-phaser/physics/codey.png')
-        console.log('player loaded')
+        this.load.image('player', 'https://content.codecademy.com/courses/learn-phaser/physics/codey.png')
     }
     create(){
-        gameState.player = this.physics.add.sprite(225, 450, 'codey');
-        console.log(gameState.player)
+        gameState.player = this.physics.add.sprite(225, 450, 'player');
         gameState.player.setCollideWorldBounds(true);
         gameState.cursors = this.input.keyboard.createCursorKeys();
     }
