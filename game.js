@@ -3,13 +3,13 @@ const gameState = {
 
 const config = {
   	type: Phaser.AUTO,
-  	width: 640,
-	height: 360,
-	backgroundColor: "b9eaff",
+  	width: 600,
+	height: 400,
+	backgroundColor: "000000",
 	physics: {
 		default: 'arcade',
 		arcade: {
-			gravity: {y: 1},
+			gravity: {y: 0},
 			enableBody: true,
 			debug: false,
 		}
