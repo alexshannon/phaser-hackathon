@@ -3,13 +3,18 @@ class GameScene extends Phaser.Scene {
 		super( {key: 'GameScene'} )
 	}
     preload(){
-        this.load.image('player', 'https://content.codecademy.com/courses/learn-phaser/physics/codey.png')
+        this.load.image('player', './assets/placeholder-textures/porter-front.png')
         this.load.image('road', './assets/placeholder-textures/road.jpg')
         this.load.image('house', './assets/placeholder-textures/house.jpg')
         this.load.image('grass', './assets/placeholder-textures/grass.jpg')
+        this.load.image('box', './assets/placeholder-textures/box.png')
+        this.load.image('bird', './assets/placeholder-textures/alert-bird-gray-red.png')
+        this.load.image('hunter', './assets/placeholder-textures/hunter-front.png')
     }
     create(){
         gameState.player = this.physics.add.sprite(225, 450, 'player').setDepth(1);
+        this.physics.add.sprite(225, 450, 'bird').setDepth(2)
+        this.physics.add.sprite(225, 375, 'hunter').setDepth(2)
         gameState.player.setCollideWorldBounds(true);
         gameState.cursors = this.input.keyboard.createCursorKeys();
         this.worldGen()
@@ -35,9 +40,10 @@ class GameScene extends Phaser.Scene {
     worldGen(){
         console.log('Generating world!')
         const tileOptions = 3;
+        const collidable = this.physics.add.staticGroup();
         let tileType;
-        for(let genYCount = 0; genYCount < 6; genYCount++){
-            for(let genCount = 0; genCount < 9; genCount++){
+        for(let genYCount = 0; genYCount < 7; genYCount++){
+            for(let genCount = 0; genCount < 10; genCount++){
                 let randomColor = Math.floor(Math.random() * tileOptions)
                 switch (randomColor){
                     case 0:
@@ -50,8 +56,14 @@ class GameScene extends Phaser.Scene {
                         tileType = 'house'
                         break;
                 }
-                this.physics.add.sprite(200 * genCount, 200*genYCount, tileType).setOrigin(0,0);
+                if(tileType === 'house'){
+                   collidable.create(200 * genCount, 200*genYCount, tileType).setDepth(1)
+                }
+                
+                this.physics.add.sprite(200 * genCount, 200*genYCount, tileType);
+                console.log('added')
             }
         }
+        this.physics.add.collider(gameState.player, collidable)
     }
 }
