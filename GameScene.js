@@ -95,7 +95,7 @@ class GameScene extends Phaser.Scene {
                         packages.create(200 * genCount, 200*genYCount, 'box').setDepth(1)
                         packageCount++;
                     }
-                    if(hunterGen === 1 && hunterSpawned === false){
+                    if(hunterGen === 1 && hunterSpawned === false && genYCount >= 3 && genCount >= 4){
                         hunter.create(200 * genCount, 200*genYCount, 'hunter').setDepth(1)
                         hunterSpawned = true;
                     }
