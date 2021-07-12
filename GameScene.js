@@ -19,7 +19,10 @@ class GameScene extends Phaser.Scene {
         gameState.player.setCollideWorldBounds(true);
         gameState.cursors = this.input.keyboard.createCursorKeys();
         //creates world, follows player
-        this.worldGen()
+        //I'm not proud of this, but guarantees that we won't get worlds without packages lol
+        while(packageCount === 0){
+            this.worldGen()
+        }
         this.cameras.main.setBounds(0, 0, 1800, 1200)
         this.physics.world.setBounds(0, 0, 1800, 1200)
         this.cameras.main.startFollow(gameState.player, false, 0.5, 0.5)
@@ -111,7 +114,7 @@ class GameScene extends Phaser.Scene {
                         console.log('bird')
                     } 
                     if(packageGen == 1 && genCount != 0 && genYCount != 0 && genCount != 9 && genYCount != 6){
-                        gameState.packages.create(200 * genCount, 200*genYCount, 'box').setDepth(1)
+                        gameState.packages.create(200 * genCount, 200*genYCount, 'box').setDepth(4)
                         packageCount++;
                     }
                     if(hunterGen >= 3 && hunterSpawned === false && genYCount >= 3 && genCount >= 4){
