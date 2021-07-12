@@ -1,5 +1,7 @@
 const collidables = []
 let packageCount = 0
+let birdCount = 0
+let hunterCount = 0
 
 class GameScene extends Phaser.Scene {
 	constructor(){
@@ -20,9 +22,7 @@ class GameScene extends Phaser.Scene {
         gameState.cursors = this.input.keyboard.createCursorKeys();
         //creates world, follows player
         //I'm not proud of this, but guarantees that we won't get worlds without packages lol
-        while(packageCount === 0){
-            this.worldGen()
-        }
+        this.worldGen()
         this.cameras.main.setBounds(0, 0, 1800, 1200)
         this.physics.world.setBounds(0, 0, 1800, 1200)
         this.cameras.main.startFollow(gameState.player, false, 0.5, 0.5)
@@ -51,6 +51,9 @@ class GameScene extends Phaser.Scene {
         let scoreText = this.add.text(0, 0, `Packages Left: ${packageCount}`, { fontSize: '25px', fill: '#FF00FF' }).setScrollFactor(0).setDepth(3)
     }
     update(){
+        if(packageCount === 0 && birdCount === 0 && hunterCount === 0){
+            this.worldGen()
+        }
         if (gameState.cursors.left.isDown) {
 			gameState.player.setVelocityX(-160);
 		} else if (gameState.cursors.right.isDown) {
@@ -71,7 +74,6 @@ class GameScene extends Phaser.Scene {
         const birdChance = 10;
         const packageChange = 10;
         const hunterChance = 25;
-        let hunterSpawned = false;
         //creates the group for the collidable houses
         gameState.house = this.physics.add.staticGroup();
         gameState.birds = this.physics.add.group();
@@ -109,17 +111,18 @@ class GameScene extends Phaser.Scene {
                     let birdGen = Math.floor(Math.random() * birdChance)
                     let packageGen = Math.floor(Math.random() * packageChange)
                     let hunterGen = Math.floor(Math.random() * hunterChance)
-                    if(birdGen === 1 && genYCount >= 3 && genCount >= 3){
+                    if(birdGen === 1 && genYCount >= 3 && genCount >= 3 && genYCount != 0 && genCount != 9 && genYCount != 6){
                         gameState.birds.create(200 * genCount, 200*genYCount, 'bird').setDepth(1)
+                        birdCount++;
                         console.log('bird')
                     } 
                     if(packageGen == 1 && genCount != 0 && genYCount != 0 && genCount != 9 && genYCount != 6){
                         gameState.packages.create(200 * genCount, 200*genYCount, 'box').setDepth(4)
                         packageCount++;
                     }
-                    if(hunterGen >= 3 && hunterSpawned === false && genYCount >= 3 && genCount >= 4){
+                    if(hunterGen >= 3 && hunterCount === 0 && genYCount >= 3 && genCount >= 4 && genYCount != 0 && genCount != 9 && genYCount != 6){
                         gameState.hunter.create(200 * genCount, 200*genYCount, 'hunter').setDepth(1)
-                        hunterSpawned = true;
+                        hunterCount++
                     }
                 }
                 
