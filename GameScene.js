@@ -13,11 +13,48 @@ class GameScene extends Phaser.Scene {
         this.load.image('box', './assets/placeholder-textures/box.png')
         this.load.image('bird', './assets/placeholder-textures/alert-bird-gray-red.png')
         this.load.image('hunter', './assets/placeholder-textures/hunter-front.png')
+	
+	this.load.audio('atmos1', './assets/Game_Audio/atmos1_1.mp3')
+	this.load.audio('main_theme', './assets/Game_Audio/main_theme.mp3')
+	this.load.audio('world_music', './assets/Game_Audio/world_music.mp3')
+	this.load.audio('victory_music', './assets/Game_Audio/victory_music.mp3')
+	this.load.audio('package_col', './assets/Game_Audio/package_col.mp3')
+	this.load.audio('package_del', './assets/Game_Audio/package_del.mp3')
+	this.load.audio('step1', './assets/Game_Audio/step1.mp3')
+	this.load.audio('step2', './assets/Game_Audio/step2.mp3')
+	this.load.audio('step3', './assets/Game_Audio/step3.mp3')
+	//this.load.audio('', './assets/Game_Audio/.mp3')
     }
     create(){
         gameState.player = this.physics.add.sprite(0, 0, 'player').setDepth(2);
         gameState.player.setCollideWorldBounds(true);
         gameState.cursors = this.input.keyboard.createCursorKeys();
+	    
+	//add audio
+	gameState.package_col = this.sound.add('package_col');
+	gameState.package_del = this.sound.add('package_del');
+	gameState.victory_music = this.sound.add('victory_music');
+	gameState.world_music = this.sound.add('world_music', {
+	    mute: false,
+	    volume: 0.5,
+	    rate: 1,
+	    detune: 0,
+	    seek: 0,
+	    loop: true,
+	    delay: 0
+	});
+	gameState.world_music.play(config);
+	gameState.atmos = this.sound.add('atmos1', {
+	    mute: false,
+	    volume: 1,
+	    rate: 1,
+	    detune: 0,
+	    seek: 0,
+	    loop: true,
+	    delay: 0
+	});
+	gameState.atmos.play(config);  
+	    
         //creates world, follows player
         //I'm not proud of this, but guarantees that we won't get worlds without packages lol
         while(packageCount === 0){
@@ -31,6 +68,7 @@ class GameScene extends Phaser.Scene {
         this.physics.add.overlap(gameState.packages, gameState.house, collectPackage, null, this)
         function collectPackage (player, box){
             box.destroy()
+	    gameState.packageCol.play()
             console.log('Package collected!')
             if(packageCount > 1){
                 packageCount--;
@@ -38,6 +76,9 @@ class GameScene extends Phaser.Scene {
             } else {
                 this.physics.pause()
                 scoreText.setText('Good job porter! \nAll Packages have been collected.')
+		gameState.world_music.stop();
+		gameState.victory_music.play();
+		
             }
         }
         this.physics.add.collider(gameState.player, gameState.birds, () => {
@@ -49,16 +90,44 @@ class GameScene extends Phaser.Scene {
             scoreText.setText(`Demons have prevented your delivery.\nThere were only ${packageCount} packages left.`, { fontSize: '25px', fill: '#FF00FF' })
         })
         let scoreText = this.add.text(0, 0, `Packages Left: ${packageCount}`, { fontSize: '25px', fill: '#FF00FF' }).setScrollFactor(0).setDepth(3)
+	
+	//player footsteps (walking and running) loop functions
+	gameState.step1 = this.sound.add('step1')
+	gameState.step2 = this.sound.add('step2')
+	gameState.step3 = this.sound.add('step3')
+	    function walkingGen () {
+		let pWalking = ['step1', 'step2', 'step3'];
+		return gameState.pWalking[Math.floor(Math.random * pWalking.length)].play()
+	    }
+
+	    const pWalkingAudio = this.time.add.event({
+		callback: walkingGen,
+		delay: 100,
+		callbackscope: this,
+		loop: true,
+	    })
+	    
+	    const pRunningAudio = this.time.add.event({
+		callback: walkingGen,
+		delay: 50,
+		callbackscope: this,
+		loop: true,
+	    })
+	
     }
     update(){
         if (gameState.cursors.left.isDown) {
 			gameState.player.setVelocityX(-160);
+			pWalkingAudio;
 		} else if (gameState.cursors.right.isDown) {
 			gameState.player.setVelocityX(160);
+			pWalkingAudio;
 		} else if (gameState.cursors.up.isDown) {
             gameState.player.setVelocityY(-160)
+		pWalkingAudio;	
         } else if (gameState.cursors.down.isDown){
             gameState.player.setVelocityY(160)
+		pWalkingAudio;
         }
         else {
 			gameState.player.setVelocityX(0);
