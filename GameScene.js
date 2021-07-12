@@ -15,20 +15,35 @@ class GameScene extends Phaser.Scene {
         this.load.image('hunter', './assets/placeholder-textures/hunter-front.png')
     }
     create(){
-        gameState.player = this.physics.add.sprite(0, 0, 'player').setDepth(1);
+        gameState.player = this.physics.add.sprite(0, 0, 'player').setDepth(2);
         gameState.player.setCollideWorldBounds(true);
         gameState.cursors = this.input.keyboard.createCursorKeys();
         //creates world, follows player
-        let world = this.worldGen()
+        this.worldGen()
         this.cameras.main.setBounds(0, 0, 1800, 1200)
         this.physics.world.setBounds(0, 0, 1800, 1200)
         this.cameras.main.startFollow(gameState.player, false, 0.5, 0.5)
-        this.physics.add.collider(gameState.player, world.packages, (box) => {
-            console.log(box)
-        })
-        this.physics.add.collider(gameState.player, world.birds, () => {
+        this.physics.add.collider(gameState.player, gameState.house)
+        this.physics.add.overlap(gameState.player, gameState.packages, collectPackage, null, this)
+        this.physics.add.overlap(gameState.packages, gameState.house, collectPackage, null, this)
+        function collectPackage (player, box){
+            box.destroy()
+            console.log('Package collected!')
+            if(packageCount > 1){
+                packageCount--;
+                scoreText.setText(`Packages Left: ${packageCount}`)
+            } else {
+                this.physics.pause()
+                scoreText.setText('Good job porter! \nAll Packages have been collected.')
+            }
+        }
+        this.physics.add.collider(gameState.player, gameState.birds, () => {
             this.physics.pause()
-            scoreText.setText(`Demons have prevented your delivery.\n There were only ${packageCount} packages left.`, { fontSize: '25px', fill: '#FF00FF' })
+            scoreText.setText(`Demons have prevented your delivery.\nThere were only ${packageCount} packages left.`, { fontSize: '25px', fill: '#FF00FF' })
+        })
+        this.physics.add.collider(gameState.player, gameState.hunter, () => {
+            this.physics.pause()
+            scoreText.setText(`Demons have prevented your delivery.\nThere were only ${packageCount} packages left.`, { fontSize: '25px', fill: '#FF00FF' })
         })
         let scoreText = this.add.text(0, 0, `Packages Left: ${packageCount}`, { fontSize: '25px', fill: '#FF00FF' }).setScrollFactor(0).setDepth(3)
     }
@@ -51,14 +66,14 @@ class GameScene extends Phaser.Scene {
         //math options for setting up the world
         const tileOptions = 5;
         const birdChance = 10;
-        const packageChange = 25;
+        const packageChange = 10;
         const hunterChance = 25;
         let hunterSpawned = false;
         //creates the group for the collidable houses
-        const collidable = this.physics.add.staticGroup();
-        const birds = this.physics.add.group();
-        const packages = this.physics.add.staticGroup();
-        const hunter = this.physics.add.staticGroup();
+        gameState.house = this.physics.add.staticGroup();
+        gameState.birds = this.physics.add.group();
+        gameState.packages = this.physics.add.staticGroup();
+        gameState.hunter = this.physics.add.staticGroup();
         let tileType;
         for(let genYCount = 0; genYCount < 7; genYCount++){
             for(let genCount = 0; genCount < 10; genCount++){
@@ -81,22 +96,26 @@ class GameScene extends Phaser.Scene {
                         break;
                 }
                 if(tileType === 'house'){
-                   collidable.create(200 * genCount, 200*genYCount, tileType).setDepth(1)
-                   collidables.push([200 * genCount, 200*genYCount, tileType])
+                    if(genCount === 0){
+                        this.physics.add.sprite(200 * genCount, 200*genYCount, 'road').setDepth(1);
+                    } else{
+                        gameState.house.create(200 * genCount, 200*genYCount, tileType).setDepth(1)
+                        collidables.push([200 * genCount, 200*genYCount, tileType])
+                    }
                 } else {
                     let birdGen = Math.floor(Math.random() * birdChance)
                     let packageGen = Math.floor(Math.random() * packageChange)
                     let hunterGen = Math.floor(Math.random() * hunterChance)
-                    if(birdGen === 1){
-                        birds.create(200 * genCount, 200*genYCount, 'bird').setDepth(1)
+                    if(birdGen === 1 && genYCount >= 3 && genCount >= 3){
+                        gameState.birds.create(200 * genCount, 200*genYCount, 'bird').setDepth(1)
                         console.log('bird')
                     } 
-                    if(packageGen === 1){
-                        packages.create(200 * genCount, 200*genYCount, 'box').setDepth(1)
+                    if(packageGen == 1 && genCount != 0 && genYCount != 0 && genCount != 9 && genYCount != 6){
+                        gameState.packages.create(200 * genCount, 200*genYCount, 'box').setDepth(1)
                         packageCount++;
                     }
-                    if(hunterGen === 1 && hunterSpawned === false && genYCount >= 3 && genCount >= 4){
-                        hunter.create(200 * genCount, 200*genYCount, 'hunter').setDepth(1)
+                    if(hunterGen >= 3 && hunterSpawned === false && genYCount >= 3 && genCount >= 4){
+                        gameState.hunter.create(200 * genCount, 200*genYCount, 'hunter').setDepth(1)
                         hunterSpawned = true;
                     }
                 }
@@ -105,8 +124,5 @@ class GameScene extends Phaser.Scene {
                 console.log('added')
             }
         }
-        this.physics.add.collider(gameState.player, collidable)
-        const worldState = {birds, packages, hunter}
-        return worldState
     }
 }
