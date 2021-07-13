@@ -114,6 +114,13 @@ class GameScene extends Phaser.Scene {
     update(){
         if (gameState.cursors.left.isDown) {
 			gameState.player.setVelocityX(-160);
+            const walkingLoop = this.time.addEvent({
+                callback: walkingGen,
+                delay: 100,
+                callbackScope: this,
+                loop: true,
+            });
+            walkingLoop;
 		} else if (gameState.cursors.right.isDown) {
 			gameState.player.setVelocityX(160);
 		} else if (gameState.cursors.up.isDown) {
