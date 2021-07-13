@@ -1,6 +1,8 @@
 const collidables = []
 let packageCount = 0
 
+let playerSpeed = 160
+
 class GameScene extends Phaser.Scene {
 	constructor(){
 		super( {key: 'GameScene'} )
@@ -51,14 +53,20 @@ class GameScene extends Phaser.Scene {
         let scoreText = this.add.text(0, 0, `Packages Left: ${packageCount}`, { fontSize: '25px', fill: '#FF00FF' }).setScrollFactor(0).setDepth(3)
     }
     update(){
+        if(gameState.cursors.shift.isDown){
+            playerSpeed = 250
+        } else {
+            playerSpeed = 160
+        }
+        // movement code
         if (gameState.cursors.left.isDown) {
-			gameState.player.setVelocityX(-160);
+			gameState.player.setVelocityX(-playerSpeed);
 		} else if (gameState.cursors.right.isDown) {
-			gameState.player.setVelocityX(160);
+			gameState.player.setVelocityX(playerSpeed);
 		} else if (gameState.cursors.up.isDown) {
-            gameState.player.setVelocityY(-160)
+            gameState.player.setVelocityY(-playerSpeed)
         } else if (gameState.cursors.down.isDown){
-            gameState.player.setVelocityY(160)
+            gameState.player.setVelocityY(playerSpeed)
         }
         else {
 			gameState.player.setVelocityX(0);
