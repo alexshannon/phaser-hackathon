@@ -117,11 +117,13 @@ class GameScene extends Phaser.Scene {
 		}
         //sets collision with the world bounds for the enemies - will be using this to call detection functions on the player
         gameState.birds.getChildren().forEach(bird => {
+            this.playerDetectBird(bird)
             if(bird.x === bird.width/2 || bird.y === bird.height/2 || bird.x === worldX - (bird.width/2) || bird.y === worldY - (bird.width/2)){
                 this.setRandomBirdDirection(bird)
             }
         })
         gameState.hunter.getChildren().forEach(doggo => {
+            this.playerDetectHunter(doggo)
             if(doggo.x === doggo.width/2 || doggo.y === doggo.height/2  || doggo.x === worldX-(doggo.width/2) || doggo.y === worldY-(doggo.height/2)){
                 this.setRandomHunterDirection(doggo)
             }
@@ -364,6 +366,12 @@ class GameScene extends Phaser.Scene {
             entity.setVelocityY(hunterSpeed);
             entity.setVelocityX(0)
         }
+    }
+    playerDetectBird(bird){
+        console.log('I am a noisy bird!')
+    }
+    playerDetectHunter(doggo){
+        console.log('I am a noisy doggo!')
     }
     worldCleanUp(){
         packageCount = 0
