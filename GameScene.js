@@ -71,27 +71,27 @@ class GameScene extends Phaser.Scene {
                 console.log('detected!')
             }
             if(bird.x === bird.width/2 || bird.y === bird.height/2 || bird.x === worldX - (bird.width/2) || bird.y === worldY - (bird.width/2)){
-                this.setRandomDirection(bird)
+                this.setRandomBirdDirection(bird)
             }
         })
         gameState.hunter.getChildren().forEach(doggo => {
             if(doggo.x === doggo.width/2 || doggo.y === doggo.height/2  || doggo.x === worldX-(doggo.width/2) || doggo.y === worldY-(doggo.height/2)){
-                this.setRandomDirection(doggo)
+                this.setRandomHunterDirection(doggo)
             }
         })
         if(finalGen && collisionSet === false){
             gameState.birds.getChildren().forEach(bird => {
-                this.movementAi(bird, 'right')
+                this.birdAi(bird, 'right')
             })
             gameState.hunter.getChildren().forEach(doggo => {
-                this.movementAi(doggo, 'up')
+                this.hunterAi(doggo, 'up')
             })
             this.physics.add.collider(gameState.player, gameState.house)
             this.physics.add.collider(gameState.player, gameState.birds)
-            this.physics.add.collider(gameState.birds, gameState.house, this.setRandomDirection, null, this)
-            this.physics.add.collider(gameState.hunter, gameState.house, this.setRandomDirection, null, this)
-            this.physics.add.collider(gameState.birds, gameState.hunter, this.setRandomDirection, null, this)
-            this.physics.add.collider(gameState.birds, gameState.birds, this.setRandomDirection, null, this)
+            this.physics.add.collider(gameState.birds, gameState.house, this.setRandomBirdDirection, null, this)
+            this.physics.add.collider(gameState.hunter, gameState.house, this.setRandomHunterDirection, null, this)
+            this.physics.add.collider(gameState.birds, gameState.hunter, this.setRandomBirdDirection, null, this)
+            this.physics.add.collider(gameState.birds, gameState.birds, this.setRandomBirdDirection, null, this)
             this.physics.add.overlap(gameState.player, gameState.packages, collectPackage, null, this);
             function collectPackage (player, box){
                 box.destroy();
@@ -173,24 +173,86 @@ class GameScene extends Phaser.Scene {
             }
         }
     }
-    setRandomDirection(entity){
+    setRandomBirdDirection(entity){
         let randomDirection = Math.floor(Math.random() * 4)
         switch (randomDirection){
             case 0:
-                this.movementAi(entity, 'right')
+                this.birdAi(entity, 'right')
                 break;
             case 1:
-                this.movementAi(entity, 'left')
+                this.birdAi(entity, 'left')
                 break;
             case 2:
-                this.movementAi(entity, 'up')
+                this.birdAi(entity, 'up')
                 break;
             case 3:
-                this.movementAi(entity, 'down')
+                this.birdAi(entity, 'down')
                 break; 
         }
     }
-    movementAi(entity, direction){
+    setRandomHunterDirection(entity){
+        let randomDirection = Math.floor(Math.random() * 4)
+        switch (randomDirection){
+            case 0:
+                this.hunterAi(entity, 'right')
+                break;
+            case 1:
+                this.hunterAi(entity, 'left')
+                break;
+            case 2:
+                this.hunterAi(entity, 'up')
+                break;
+            case 3:
+                this.hunterAi(entity, 'down')
+                break; 
+        }
+    }
+    birdAi(entity, direction){
+        let moveRight;
+        let moveLeft;
+        let moveUp;
+        let moveDown;
+
+        switch(direction){
+            case 'right':
+                moveRight = true;
+                moveLeft = false;
+                moveUp = false;
+                moveDown = false;
+                break;
+            case 'left':
+                moveRight = false;
+                moveLeft = true;
+                moveUp = false;
+                moveDown = false;
+                break;
+            case 'up':
+                moveRight = false;
+                moveLeft = false;
+                moveUp = true;
+                moveDown = false;
+                break;
+            case 'down':
+                moveRight = false;
+                moveLeft = false;
+                moveUp = false;
+                moveDown = true;
+                break;
+        }
+        if(moveRight){
+            entity.setVelocityX(birdSpeed);
+        }
+        if(moveLeft === true){
+            entity.setVelocityX(-birdSpeed);
+        }
+        if(moveUp === true){
+            entity.setVelocityY(-birdSpeed)
+        }
+        if(moveDown === true){
+            entity.setVelocityY(birdSpeed);
+        }
+    }
+    hunterAi(entity, direction){
         let moveRight;
         let moveLeft;
         let moveUp;
