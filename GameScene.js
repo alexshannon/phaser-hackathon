@@ -5,8 +5,8 @@ let hunterCount = 0;
 let finalGen = false;
 let collisionSet = false;
 
-const worldX = 1770;
-const worldY = 1170;
+const worldX = 1800;
+const worldY = 1200;
 
 const birdSpeed = 160;
 
@@ -67,12 +67,15 @@ class GameScene extends Phaser.Scene {
             gameState.player.setVelocityY(0);
 		}
         gameState.birds.getChildren().forEach(bird => {
-            if(bird.x === 30 || bird.y === 30 || bird.x === worldX || bird.y === worldY){
+            if(Math.abs(bird.x-gameState.player.x) <= 80){
+                console.log('detected!')
+            }
+            if(bird.x === bird.width/2 || bird.y === bird.height/2 || bird.x === worldX - (bird.width/2) || bird.y === worldY - (bird.width/2)){
                 this.setRandomDirection(bird)
             }
         })
         gameState.hunter.getChildren().forEach(doggo => {
-            if(doggo.x === 45 || doggo.y === 45 || doggo.x === worldX-15 || doggo.y === worldY-15){
+            if(doggo.x === doggo.width/2 || doggo.y === doggo.height/2  || doggo.x === worldX-(doggo.width/2) || doggo.y === worldY-(doggo.height/2)){
                 this.setRandomDirection(doggo)
             }
         })
@@ -83,7 +86,6 @@ class GameScene extends Phaser.Scene {
             gameState.hunter.getChildren().forEach(doggo => {
                 this.movementAi(doggo, 'up')
             })
-
             this.physics.add.collider(gameState.player, gameState.house)
             this.physics.add.collider(gameState.player, gameState.birds)
             this.physics.add.collider(gameState.birds, gameState.house, this.setRandomDirection, null, this)
@@ -93,7 +95,6 @@ class GameScene extends Phaser.Scene {
             this.physics.add.overlap(gameState.player, gameState.packages, collectPackage, null, this);
             function collectPackage (player, box){
                 box.destroy();
-                console.log('Package collected!');
                 if(packageCount > 1){
                     packageCount--;
                     gameState.scoreText.setText(`Packages Left: ${packageCount}`);
