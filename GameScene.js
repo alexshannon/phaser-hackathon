@@ -4,8 +4,11 @@ let birdCount = 0;
 let hunterCount = 0;
 let finalGen = false;
 let collisionSet = false;
-const worldX = 1800;
-const worldY = 1200;
+
+const worldX = 1770;
+const worldY = 1170;
+
+const birdSpeed = 160;
 
 class GameScene extends Phaser.Scene {
 	constructor(){
@@ -35,7 +38,6 @@ class GameScene extends Phaser.Scene {
             gameState.scoreText.setText(`Demons have prevented your delivery.\nThere were only ${packageCount} packages left.`, { fontSize: '25px', fill: '#FF00FF' });
         })
         this.physics.add.collider(gameState.player, gameState.hunter, () => {
-            this.worldCleanUp()
             this.physics.pause();
             gameState.scoreText.setText(`Demons have prevented your delivery.\nThere were only ${packageCount} packages left.`, { fontSize: '25px', fill: '#FF00FF' });
         })
@@ -43,7 +45,7 @@ class GameScene extends Phaser.Scene {
     update(){
         //I'm not proud of this, but guarantees that we won't get worlds without packages lol
         if(packageCount === 0 || birdCount === 0 || hunterCount === 0 && finalGen === false){
-            console.log('regenning...')
+            console.log('regenning...' + packageCount + ',' + birdCount +',' + hunterCount)
             this.worldCleanUp();
             this.worldGen();
         } else {
@@ -64,16 +66,31 @@ class GameScene extends Phaser.Scene {
 			gameState.player.setVelocityX(0);
             gameState.player.setVelocityY(0);
 		}
-        if(finalGen){
+        gameState.birds.getChildren().forEach(bird => {
+            if(bird.x === 30 || bird.y === 30 || bird.x === worldX || bird.y === worldY){
+                this.setRandomDirection(bird)
+            }
+        })
+        gameState.hunter.getChildren().forEach(doggo => {
+            if(doggo.x === 45 || doggo.y === 45 || doggo.x === worldX-15 || doggo.y === worldY-15){
+                this.setRandomDirection(doggo)
+            }
+        })
+        if(finalGen && collisionSet === false){
             gameState.birds.getChildren().forEach(bird => {
-                this.birdAi(bird)
+                this.movementAi(bird, 'right')
             })
+            gameState.hunter.getChildren().forEach(doggo => {
+                this.movementAi(doggo, 'up')
+            })
+
             this.physics.add.collider(gameState.player, gameState.house)
             this.physics.add.collider(gameState.player, gameState.birds)
+            this.physics.add.collider(gameState.birds, gameState.house, this.setRandomDirection, null, this)
+            this.physics.add.collider(gameState.hunter, gameState.house, this.setRandomDirection, null, this)
+            this.physics.add.collider(gameState.birds, gameState.hunter, this.setRandomDirection, null, this)
+            this.physics.add.collider(gameState.birds, gameState.birds, this.setRandomDirection, null, this)
             this.physics.add.overlap(gameState.player, gameState.packages, collectPackage, null, this);
-            gameState.packages.getChildren().forEach(box => {
-                console.log(box)
-            })
             function collectPackage (player, box){
                 box.destroy();
                 console.log('Package collected!');
@@ -85,6 +102,7 @@ class GameScene extends Phaser.Scene {
                     gameState.scoreText.setText('Good job porter! \nAll Packages have been collected.');
                 }
             }
+            collisionSet = true;
         }
     }
     worldGen(){
@@ -100,7 +118,6 @@ class GameScene extends Phaser.Scene {
         gameState.packages = this.physics.add.staticGroup();
         gameState.hunter = this.physics.add.group();
         gameState.enviroTiles = this.physics.add.group();
-
 
         let tileType;
         for(let genYCount = 0; genYCount < 7; genYCount++){
@@ -135,7 +152,9 @@ class GameScene extends Phaser.Scene {
                     let packageGen = Math.floor(Math.random() * packageChange);
                     let hunterGen = Math.floor(Math.random() * hunterChance);
                     if(birdGen === 1 && genYCount >= 3 && genCount >= 3 && genYCount != 0 && genCount != 9 && genYCount != 6){
-                        gameState.birds.create(200 * genCount, 200*genYCount, 'bird').setDepth(2);
+                        let bird = this.physics.add.sprite(200 * genCount, 200*genYCount, 'bird').setDepth(2);
+                        gameState.birds.add(bird)
+                        bird.setCollideWorldBounds(true)
                         birdCount++;
                     } 
                     if(packageGen == 1 && genCount != 0 && genYCount != 0 && genCount != 9 && genYCount != 6){
@@ -143,32 +162,76 @@ class GameScene extends Phaser.Scene {
                         packageCount++;
                     }
                     if(hunterGen >= 3 && hunterCount === 0 && genYCount >= 3 && genCount >= 4 && genYCount != 0 && genCount != 9 && genYCount != 6){
-                        gameState.hunter.create(200 * genCount, 200*genYCount, 'hunter').setDepth(1);
+                        let doggo = this.physics.add.sprite(200 * genCount, 200*genYCount, 'hunter').setDepth(1);
+                        gameState.hunter.add(doggo)
+                        doggo.setCollideWorldBounds(true)
                         hunterCount++;
                     }
                 }
                 this.physics.add.sprite(200 * genCount, 200*genYCount, tileType);
-                console.log('added')
             }
         }
     }
-    birdAi(bird){
+    setRandomDirection(entity){
+        let randomDirection = Math.floor(Math.random() * 4)
+        switch (randomDirection){
+            case 0:
+                this.movementAi(entity, 'right')
+                break;
+            case 1:
+                this.movementAi(entity, 'left')
+                break;
+            case 2:
+                this.movementAi(entity, 'up')
+                break;
+            case 3:
+                this.movementAi(entity, 'down')
+                break; 
+        }
+    }
+    movementAi(entity, direction){
         let moveRight;
         let moveLeft;
         let moveUp;
-        let moveDown = true;
+        let moveDown;
 
-        if(moveRight === true && bird.x <= worldX){
-            bird.x += 3;
+        switch(direction){
+            case 'right':
+                moveRight = true;
+                moveLeft = false;
+                moveUp = false;
+                moveDown = false;
+                break;
+            case 'left':
+                moveRight = false;
+                moveLeft = true;
+                moveUp = false;
+                moveDown = false;
+                break;
+            case 'up':
+                moveRight = false;
+                moveLeft = false;
+                moveUp = true;
+                moveDown = false;
+                break;
+            case 'down':
+                moveRight = false;
+                moveLeft = false;
+                moveUp = false;
+                moveDown = true;
+                break;
         }
-        if(moveLeft === true && bird.x >= 0){
-            bird.x -= 3;
+        if(moveRight){
+            entity.setVelocityX(birdSpeed);
         }
-        if(moveUp === true && bird.y >= 0){
-            bird.y -= 3;
+        if(moveLeft === true){
+            entity.setVelocityX(-birdSpeed);
         }
-        if(moveDown === true && bird.y <= worldY){
-            bird.y += 3;
+        if(moveUp === true){
+            entity.setVelocityY(-birdSpeed)
+        }
+        if(moveDown === true){
+            entity.setVelocityY(birdSpeed);
         }
     }
     worldCleanUp(){
@@ -187,8 +250,8 @@ class GameScene extends Phaser.Scene {
         gameState.hunter.getChildren().forEach(hunter => {
             hunter.destroy()
         })
-        gameState.packages.getChildren().forEach(box => {
-           box.destroy()
+        gameState.packages.getChildren().forEach(x => {
+           x.destroy()
         })
     }
 }
