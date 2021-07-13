@@ -24,6 +24,17 @@ class GameScene extends Phaser.Scene {
         this.load.image('box', './assets/placeholder-textures/box.png')
         this.load.image('bird', './assets/placeholder-textures/alert-bird-gray-red.png')
         this.load.image('hunter', './assets/placeholder-textures/hunter-front.png')
+
+        //audio tracks
+        this.load.audio('atmos1', './assets/Game_Audio/atmos1_1.mp3')
+        this.load.audio('main_theme', './assets/Game_Audio/main_theme.mp3')
+        this.load.audio('world_music', './assets/Game_Audio/world_music.mp3')
+        this.load.audio('victory_music', './assets/Game_Audio/victory_music.mp3')
+        this.load.audio('package_col', './assets/Game_Audio/package_col.mp3')
+        this.load.audio('package_del', './assets/Game_Audio/package_del.mp3')
+        this.load.audio('step1', './assets/Game_Audio/step1.mp3')
+        this.load.audio('step2', './assets/Game_Audio/step2.mp3')
+        this.load.audio('step3', './assets/Game_Audio/step3.mp3')
     }
     create(){
         gameState.player = this.physics.add.sprite(0, 0, 'player').setDepth(2);
@@ -35,11 +46,39 @@ class GameScene extends Phaser.Scene {
         this.physics.world.setBounds(0, 0, 1800, 1200);
         gameState.scoreText = this.add.text(0, 0, `Packages Left: ${packageCount}`, { fontSize: '25px', fill: '#FF00FF' }).setScrollFactor(0).setDepth(3);
         this.cameras.main.startFollow(gameState.player, false, 0.5, 0.5);
+        //music
+        let world_music = this.sound.add('world_music', {
+            mute: false,
+            volume: 0.5,
+            rate: 1,
+            detune: 0,
+            seek: 0,
+            loop: true,
+            delay: 0
+        });
+        let atmos = this.sound.add('atmos1', {
+            mute: false,
+            volume: 1,
+            rate: 1,
+            detune: 0,
+            seek: 0,
+            loop: true,
+            delay: 0
+        });
+
+        //plays the music
+        world_music.play();
+        atmos.play(); 
+        
         this.physics.add.collider(gameState.birds, gameState.player, (bird) => {
+            world_music.stop();
+            atmos.stop();
             this.physics.pause();
             gameState.scoreText.setText(`Demons have prevented your delivery.\nThere were only ${packageCount} packages left.`, { fontSize: '25px', fill: '#FF00FF' });
         })
         this.physics.add.collider(gameState.player, gameState.hunter, () => {
+            world_music.stop();
+            atmos.stop();
             this.physics.pause();
             gameState.scoreText.setText(`Demons have prevented your delivery.\nThere were only ${packageCount} packages left.`, { fontSize: '25px', fill: '#FF00FF' });
         })
@@ -105,12 +144,18 @@ class GameScene extends Phaser.Scene {
             this.physics.add.collider(gameState.birds, gameState.hunter, this.setRandomBirdDirection, null, this)
             this.physics.add.collider(gameState.birds, gameState.birds, this.setRandomBirdDirection, null, this)
             this.physics.add.overlap(gameState.player, gameState.packages, collectPackage, null, this);
+
+            //package and victory music needs to be declared here
+            let package_col = this.sound.add('package_col');
+            let victory_music = this.sound.add('victory_music');
             function collectPackage (player, box){
                 box.destroy();
+                package_col.play()
                 if(packageCount > 1){
                     packageCount--;
                     gameState.scoreText.setText(`Packages Left: ${packageCount}`);
                 } else {
+                    victory_music.play();
                     this.physics.pause();
                     gameState.scoreText.setText('Good job porter! \nAll Packages have been collected.');
                 }
@@ -160,9 +205,16 @@ class GameScene extends Phaser.Scene {
                         gameState.house.create(200 * genCount, 200*genYCount, tileType).setDepth(1);
                         collidables.push([200 * genCount, 200*genYCount, tileType]);
                     }
-                } else {
-                    let birdGen = Math.floor(Math.random() * birdChance);
+                }
+                if(tileType === 'road' || tileType === 'grass'){
                     let packageGen = Math.floor(Math.random() * packageChange);
+                    if(packageGen == 1 && genCount != 0 && genYCount != 0 && genCount != 9 && genYCount != 6){
+                        gameState.packages.create(200 * genCount, 200*genYCount, 'box').setDepth(3);
+                        packageCount++;
+                    }
+                }
+                if(tileType === 'road' || tileType === 'grass') {
+                    let birdGen = Math.floor(Math.random() * birdChance);
                     let hunterGen = Math.floor(Math.random() * hunterChance);
                     if(birdGen === 1 && genYCount >= 3 && genCount >= 3 && genYCount != 0 && genCount != 9 && genYCount != 6){
                         let bird = this.physics.add.sprite(200 * genCount, 200*genYCount, 'bird').setDepth(2);
@@ -170,10 +222,6 @@ class GameScene extends Phaser.Scene {
                         bird.setCollideWorldBounds(true)
                         birdCount++;
                     } 
-                    if(packageGen == 1 && genCount != 0 && genYCount != 0 && genCount != 9 && genYCount != 6){
-                        gameState.packages.create(200 * genCount, 200*genYCount, 'box').setDepth(3);
-                        packageCount++;
-                    }
                     if(hunterGen >= 3 && hunterCount === 0 && genYCount >= 3 && genCount >= 4 && genYCount != 0 && genCount != 9 && genYCount != 6){
                         let doggo = this.physics.add.sprite(200 * genCount, 200*genYCount, 'hunter').setDepth(1);
                         gameState.hunter.add(doggo)
