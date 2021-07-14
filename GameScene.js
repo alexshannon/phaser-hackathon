@@ -21,7 +21,7 @@ class GameScene extends Phaser.Scene {
         this.load.image('road', './assets/placeholder-textures/road.jpg')
         this.load.image('house', './assets/placeholder-textures/house.jpg')
         this.load.image('grass', './assets/placeholder-textures/grass.jpg')
-        this.load.image('box', './assets/placeholder-textures/box.png')
+        this.load.image('box', './assets/placeholder-textures/box_resize.png')
         this.load.spritesheet('bird', './assets/spritesheets/bird-spritesheet.png', {frameWidth: 60, frameHeight: 60})
         this.load.spritesheet('hunter', './assets/spritesheets/hunter-spritesheet.png', {frameWidth: 90, frameHeight: 90})
 
@@ -85,6 +85,7 @@ class GameScene extends Phaser.Scene {
             gameState.scoreText.setText(`Demons have prevented your delivery.\nThere were only ${packageCount} packages left.`, { fontSize: '25px', fill: '#FF00FF' });
         })
         this.generateAnimations();
+        gameState.alertPhase = false;
     }
     update(){
         //I'm not proud of this, but guarantees that we won't get worlds without packages lol
@@ -168,6 +169,9 @@ class GameScene extends Phaser.Scene {
         })
         gameState.hunter.getChildren().forEach(doggo => {
             this.playerDetectHunter(doggo)
+            if(gameState.alertPhase){
+                this.lookAtPlayer(doggo)
+            }
             if(doggo.x === doggo.width/2 || doggo.y === doggo.height/2  || doggo.x === worldX-(doggo.width/2) || doggo.y === worldY-(doggo.height/2)){
                 this.setRandomHunterDirection(doggo)
             }
@@ -187,9 +191,8 @@ class GameScene extends Phaser.Scene {
             this.physics.add.collider(gameState.player, gameState.birds)
             this.physics.add.collider(gameState.birds, gameState.house, this.setRandomBirdDirection, null, this)
             this.physics.add.collider(gameState.hunter, gameState.house, this.setRandomHunterDirection, null, this)
-            this.physics.add.collider(gameState.birds, gameState.hunter, this.setRandomBirdDirection, null, this)
-            this.physics.add.collider(gameState.birds, gameState.birds, this.setRandomBirdDirection, null, this)
             this.physics.add.overlap(gameState.player, gameState.packages, collectPackage, null, this);
+
 
             //package and victory music needs to be declared here
             let package_col = this.sound.add('package_col');
@@ -312,6 +315,38 @@ class GameScene extends Phaser.Scene {
                 break; 
         }
     }
+    lookAtPlayer(entity){
+        let x = entity.x
+        let y = entity.y
+        let playerX = gameState.player.x 
+        let playerY = gameState.player.y
+        
+        if(playerX > x){
+            entity.setVelocityX(hunterSpeed)
+            entity.anims.play('hunter_alert_side', true);
+			entity.flipX = true;
+        }
+        if(playerX < x){
+            entity.setVelocityX(-hunterSpeed)
+            entity.anims.play('hunter_alert_side', true);
+        }
+        if(playerX === x){
+            entity.setVelocityX(0)
+            entity.anims.play('hunter_alert_down', true);
+        }
+        if(playerY > y){
+            entity.setVelocityY(hunterSpeed)
+            entity.anims.play('hunter_alert_down', true);
+        }
+        if(playerY < y){
+            entity.setVelocityY(-hunterSpeed)
+            entity.anims.play('hunter_alert_up', true);
+        }
+        if(playerY === y){
+            entity.setVelocityY(0)
+            entity.anims.play('hunter_alert_down', true);
+        }
+    }
     birdAi(entity, direction){
         let moveRight;
         let moveLeft;
@@ -367,6 +402,7 @@ class GameScene extends Phaser.Scene {
             entity.anims.play('bird_walk_down', true);
         }
     }
+   
     hunterAi(entity, direction){
         let moveRight;
         let moveLeft;
@@ -428,20 +464,31 @@ class GameScene extends Phaser.Scene {
         if(Math.abs(xDistance) < 200 && Math.abs(yDistance) < 200){
             console.log('Player in range of bird')
             //left
+            if(gameState.alertPhase){
+                bird.anims.play('bird_alert', true)
+            }
             if(bird.body.velocity.x < 0 && xDistance < 0){
                 console.log('seen left by bird')
+                bird.setVelocity(0)
+                gameState.alertPhase = true;
             }
             //right
             if(bird.body.velocity.x > 0 && xDistance > 0){
                 console.log('seen right by bird')
+                bird.setVelocity(0)
+                gameState.alertPhase = true;
             }
             //up
             if(bird.body.velocity.y < 0 && yDistance < 0){
                 console.log('seen up by bird')
+                bird.setVelocity(0)
+                gameState.alertPhase = true;
             }
             //down
             if(bird.body.velocity.y > 0 && yDistance > 0){
                 console.log('seen down by bird')
+                bird.setVelocity(0)
+                gameState.alertPhase = true;
             }
         }
     }
@@ -453,39 +500,24 @@ class GameScene extends Phaser.Scene {
             //left
             if(doggo.body.velocity.x < 0 && xDistance < 0){
                 console.log('seen left')
-                for(let i = 0; i < collidables.length; i++){
-                    console.log(collidables[i][0])
-                }
-                this.hunterPersue(doggo)
+                gameState.alertPhase = true;
             }
             //right
             if(doggo.body.velocity.x > 0 && xDistance > 0){
                 console.log('seen right')
-                for(let i = 0; i < collidables.length; i++){
-                    console.log(collidables[i][0])
-                }
-                this.hunterPersue(doggo)
+                gameState.alertPhase = true;
             }
             //up
             if(doggo.body.velocity.y < 0 && yDistance < 0){
                 console.log('seen up')
-                for(let i = 0; i < collidables.length; i++){
-                    console.log(collidables[i][0])
-                }
-                this.hunterPersue(doggo)
+                gameState.alertPhase = true;
             }
             //down
             if(doggo.body.velocity.y > 0 && yDistance > 0){
                 console.log('seen down')
-                for(let i = 0; i < collidables.length; i++){
-                    console.log(collidables[i][0])
-                }
-                this.hunterPersue(doggo)
+                gameState.alertPhase = true;
             }
         }
-    }
-    hunterPersue(doggo){
-        console.log('hunting player!')
     }
     worldCleanUp(){
         packageCount = 0
