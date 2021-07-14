@@ -35,6 +35,10 @@ class GameScene extends Phaser.Scene {
         this.load.audio('step1', './assets/Game_Audio/step1.mp3')
         this.load.audio('step2', './assets/Game_Audio/step2.mp3')
         this.load.audio('step3', './assets/Game_Audio/step3.mp3')
+        this.load.audio('alert_music', './assets/Game_Audio/alert_music.mp3')
+        this.load.audio('defeated', './assets/Game_Audio/defeated.mp3')
+        this.load.audio('bird_attack', './assets/Game_Audio/bird2.mp3')
+        this.load.audio('hunter_attack', './assets/Game_Audio/hunter1.mp3')
     }
     create(){
         gameState.player = this.physics.add.sprite(0, 0, 'player').setDepth(2);
@@ -49,7 +53,7 @@ class GameScene extends Phaser.Scene {
         gameState.scoreText = this.add.text(0, 0, `Packages Left: ${packageCount}`, { fontSize: '25px', fill: '#FF00FF' }).setScrollFactor(0).setDepth(3);
         this.cameras.main.startFollow(gameState.player, false, 0.5, 0.5);
         //music
-        let world_music = this.sound.add('world_music', {
+        gameState.world_music = this.sound.add('world_music', {
             mute: false,
             volume: 0.5,
             rate: 1,
@@ -58,7 +62,7 @@ class GameScene extends Phaser.Scene {
             loop: true,
             delay: 0
         });
-        let atmos = this.sound.add('atmos1', {
+        gameState.atmos = this.sound.add('atmos1', {
             mute: false,
             volume: 1,
             rate: 1,
@@ -67,25 +71,29 @@ class GameScene extends Phaser.Scene {
             loop: true,
             delay: 0
         });
-
+        let defeated = this.sound.add('defeated');
+        
         //plays the music
-        world_music.play();
-        atmos.play(); 
+        gameState.world_music.play();
+        gameState.atmos.play(); 
         
         this.physics.add.collider(gameState.birds, gameState.player, (bird) => {
-            world_music.stop();
-            atmos.stop();
+            gameState.world_music.stop();
+            gameState.atmos.stop();
+            defeated.play();
             this.physics.pause();
             gameState.scoreText.setText(`Demons have prevented your delivery.\nThere were only ${packageCount} packages left.`, { fontSize: '25px', fill: '#FF00FF' });
         })
         this.physics.add.collider(gameState.player, gameState.hunter, () => {
-            world_music.stop();
-            atmos.stop();
+            gameState.world_music.stop();
+            gameState.atmos.stop();
+            defeated.play();
             this.physics.pause();
             gameState.scoreText.setText(`Demons have prevented your delivery.\nThere were only ${packageCount} packages left.`, { fontSize: '25px', fill: '#FF00FF' });
         })
         this.generateAnimations();
         gameState.alertPhase = false;
+
     }
     update(){
         //I'm not proud of this, but guarantees that we won't get worlds without packages lol
@@ -112,8 +120,10 @@ class GameScene extends Phaser.Scene {
             gameState.player.direction = 'side';
 			if (gameState.player.isRun) {
 				gameState.player.anims.play('porter_run_side', true);
+                
 			} else {
 				gameState.player.anims.play('porter_walk_side', true);
+                
 			}
 			gameState.player.flipX = false;
 		} else if (gameState.cursors.right.isDown) {
@@ -159,6 +169,37 @@ class GameScene extends Phaser.Scene {
                 }
             }
 		}
+        //bird and hunter attack audio and alert_mus
+        gameState.hunter_attack = this.sound.add('hunter_attack',{
+            mute: false,
+            volume: 1,
+            rate: 1,
+            detune: 0,
+            seek: 0,
+            loop: true,
+            delay: 1000,
+        });
+        gameState.bird_attack = this.sound.add('bird_attack',{
+            mute: false,
+            volume: 1,
+            rate: 1,
+            detune: 0,
+            seek: 0,
+            loop: true,
+            delay: 0,
+        })
+        gameState.alert_music = this.sound.add('alert_mus', {
+            mute: false,
+            volume: 1,
+            rate: 1,
+            detune: 0,
+            seek: 0,
+            loop: true,
+            delay: 0,
+        })
+        
+
+
         //sets collision with the world bounds for the enemies - will be using this to call detection functions on the player
         gameState.birds.getChildren().forEach(bird => {
             this.playerDetectBird(bird)
@@ -203,6 +244,8 @@ class GameScene extends Phaser.Scene {
                     packageCount--;
                     gameState.scoreText.setText(`Packages Left: ${packageCount}`);
                 } else {
+                    gameState.world_music.stop();
+                    gameState.atmos.stop();
                     victory_music.play();
                     this.physics.pause();
                     gameState.scoreText.setText('Good job porter! \nAll Packages have been collected.');
