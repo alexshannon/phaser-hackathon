@@ -12,6 +12,10 @@ const birdSpeed = 160;
 const hunterSpeed = 160;
 let playerSpeed;
 
+let alertMusicPlaying = false;
+let birdYelling = false;
+let hunterYelling = false;
+
 class GameScene extends Phaser.Scene {
 	constructor(){
 		super( {key: 'GameScene'} )
@@ -20,7 +24,7 @@ class GameScene extends Phaser.Scene {
         this.load.spritesheet('player', './assets/spritesheets/porter-spritesheet.png', {frameWidth: 60, frameHeight: 60})
         this.load.image('road', './assets/placeholder-textures/road.jpg')
         this.load.image('house', './assets/placeholder-textures/house.jpg')
-        this.load.image('grass', './assets/placeholder-textures/grass.jpg')
+        this.load.image('grass', './assets/placeholder-textures/grass1.jpg')
         this.load.image('box', './assets/placeholder-textures/box_resize.png')
         this.load.spritesheet('bird', './assets/spritesheets/bird-spritesheet.png', {frameWidth: 60, frameHeight: 60})
         this.load.spritesheet('hunter', './assets/spritesheets/hunter-spritesheet.png', {frameWidth: 90, frameHeight: 90})
@@ -35,6 +39,10 @@ class GameScene extends Phaser.Scene {
         this.load.audio('step1', './assets/Game_Audio/step1.mp3')
         this.load.audio('step2', './assets/Game_Audio/step2.mp3')
         this.load.audio('step3', './assets/Game_Audio/step3.mp3')
+        this.load.audio('alert_music', './assets/Game_Audio/alert_music.mp3')
+        this.load.audio('defeated', './assets/Game_Audio/defeated.mp3')
+        this.load.audio('bird_attack', './assets/Game_Audio/bird2.mp3')
+        this.load.audio('hunter_attack', './assets/Game_Audio/hunter1.mp3')
     }
     create(){
         gameState.player = this.physics.add.sprite(0, 0, 'player').setDepth(2);
@@ -49,7 +57,7 @@ class GameScene extends Phaser.Scene {
         gameState.scoreText = this.add.text(0, 0, `Packages Left: ${packageCount}`, { fontSize: '25px', fill: '#FF00FF' }).setScrollFactor(0).setDepth(3);
         this.cameras.main.startFollow(gameState.player, false, 0.5, 0.5);
         //music
-        let world_music = this.sound.add('world_music', {
+        gameState.world_music = this.sound.add('world_music', {
             mute: false,
             volume: 0.5,
             rate: 1,
@@ -58,7 +66,7 @@ class GameScene extends Phaser.Scene {
             loop: true,
             delay: 0
         });
-        let atmos = this.sound.add('atmos1', {
+        gameState.atmos = this.sound.add('atmos1', {
             mute: false,
             volume: 1,
             rate: 1,
@@ -67,20 +75,60 @@ class GameScene extends Phaser.Scene {
             loop: true,
             delay: 0
         });
+        gameState.alertMusic = this.sound.add('alert_music', {
+            mute: false,
+            volume: 1,
+            rate: 1,
+            detune: 0,
+            seek: 0,
+            loop: true,
+            delay: 0
+        })
+        gameState.hunter_attack = this.sound.add('hunter_attack',{
+            mute: false,
+            volume: 1,
+            rate: 1,
+            detune: 0,
+            seek: 0,
+            loop: true,
+            delay: 1000,
+        });
+        gameState.bird_attack = this.sound.add('bird_attack',{
+            mute: false,
+            volume: 1,
+            rate: 1,
+            detune: 0,
+            seek: 0,
+            loop: true,
+            delay: 0,
+        })
+        gameState.defeated = this.sound.add('defeated')
 
         //plays the music
-        world_music.play();
-        atmos.play(); 
+        gameState.world_music.play();
+        gameState.atmos.play(); 
         
         this.physics.add.collider(gameState.birds, gameState.player, (bird) => {
-            world_music.stop();
-            atmos.stop();
+            gameState.world_music.stop();
+            gameState.atmos.stop();
+            gameState.defeated.play();
+            gameState.bird_attack.stop()
+            gameState.hunter_attack.stop()
+            if(alertMusicPlaying){
+                gameState.alertMusic.stop()
+            }
             this.physics.pause();
             gameState.scoreText.setText(`Demons have prevented your delivery.\nThere were only ${packageCount} packages left.`, { fontSize: '25px', fill: '#FF00FF' });
         })
         this.physics.add.collider(gameState.player, gameState.hunter, () => {
-            world_music.stop();
-            atmos.stop();
+            gameState.world_music.stop();
+            gameState.atmos.stop();
+            gameState.defeated.play();
+            gameState.bird_attack.stop()
+            gameState.hunter_attack.stop()
+            if(alertMusicPlaying){
+                gameState.alertMusic.stop()
+            }
             this.physics.pause();
             gameState.scoreText.setText(`Demons have prevented your delivery.\nThere were only ${packageCount} packages left.`, { fontSize: '25px', fill: '#FF00FF' });
         })
@@ -159,6 +207,12 @@ class GameScene extends Phaser.Scene {
                 }
             }
 		}
+        if(gameState.alertPhase && !alertMusicPlaying){
+            console.log('Should be playing alert music')
+            gameState.alertMusic.play()
+            alertMusicPlaying = true;
+            gameState.world_music.stop()
+        }
         //sets collision with the world bounds for the enemies - will be using this to call detection functions on the player
         gameState.birds.getChildren().forEach(bird => {
             this.playerDetectBird(bird)
@@ -465,6 +519,10 @@ class GameScene extends Phaser.Scene {
             if(gameState.alertPhase){
                 bird.anims.play('bird_alert', true)
             }
+            if(gameState.alertPhase && !birdYelling){
+                gameState.bird_attack.play()
+                birdYelling = true;
+            }
             if(bird.body.velocity.x < 0 && xDistance < 0){
                 bird.setVelocity(0)
                 gameState.alertPhase = true;
@@ -489,7 +547,12 @@ class GameScene extends Phaser.Scene {
     playerDetectHunter(doggo){
         let xDistance = gameState.player.x - doggo.x
         let yDistance = gameState.player.y - doggo.y
+
         if(Math.abs(xDistance) < 200 && Math.abs(yDistance) < 200){
+            if(gameState.alertPhase && !hunterYelling){
+                gameState.hunter_attack.play();
+                hunterYelling = true
+            }
             //left
             if(doggo.body.velocity.x < 0 && xDistance < 0){
                 gameState.alertPhase = true;
