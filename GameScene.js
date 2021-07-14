@@ -17,16 +17,18 @@ class GameScene extends Phaser.Scene {
 		super( {key: 'GameScene'} )
 	}
     preload(){
-        this.load.image('player', './assets/placeholder-textures/porter-front.png')
+        this.load.spritesheet('player', './assets/spritesheets/porter-spritesheet.png', {frameWidth: 60, frameHeight: 60})
         this.load.image('road', './assets/placeholder-textures/road.jpg')
         this.load.image('house', './assets/placeholder-textures/house.jpg')
         this.load.image('grass', './assets/placeholder-textures/grass.jpg')
         this.load.image('box', './assets/placeholder-textures/box.png')
-        this.load.image('bird', './assets/placeholder-textures/alert-bird-gray-red.png')
-        this.load.image('hunter', './assets/placeholder-textures/hunter-front.png')
+        this.load.spritesheet('bird', './assets/spritesheets/bird-spritesheet.png', {frameWidth: 60, frameHeight: 60})
+        this.load.spritesheet('hunter', './assets/spritesheets/hunter-spritesheet.png', {frameWidth: 90, frameHeight: 90})
     }
     create(){
         gameState.player = this.physics.add.sprite(0, 0, 'player').setDepth(2);
+		gameState.player.direction = 'down';
+		gameState.player.isRun = false;
         gameState.player.setCollideWorldBounds(true);
         gameState.cursors = this.input.keyboard.createCursorKeys();
         //creates world, follows player, sets collisions
@@ -43,6 +45,7 @@ class GameScene extends Phaser.Scene {
             this.physics.pause();
             gameState.scoreText.setText(`Demons have prevented your delivery.\nThere were only ${packageCount} packages left.`, { fontSize: '25px', fill: '#FF00FF' });
         })
+		this.generateAnimations();
     }
     update(){
         //I'm not proud of this, but guarantees that we won't get worlds without packages lol
@@ -58,24 +61,68 @@ class GameScene extends Phaser.Scene {
         //sprinting and player speed
         if(gameState.cursors.shift.isDown){
             playerSpeed = 250;
+			gameState.player.isRun = true;
         } else {
             playerSpeed = 160;
+			gameState.player.isRun = false;
         }
 
         //actual player movement code
         if (gameState.cursors.left.isDown) {
 			gameState.player.setVelocityX(-playerSpeed);
+			gameState.player.direction = 'side';
+			if (gameState.player.isRun) {
+				gameState.player.anims.play('porter_run_side', true);
+			} else {
+				gameState.player.anims.play('porter_walk_side', true);
+			}
+			gameState.player.flipX = false;
 		} else if (gameState.cursors.right.isDown) {
 			gameState.player.setVelocityX(playerSpeed);
+			gameState.player.direction = 'side';
+			if (gameState.player.isRun) {
+				gameState.player.anims.play('porter_run_side', true);
+			} else {
+				gameState.player.anims.play('porter_walk_side', true);
+			}
+			gameState.player.flipX = true;
 		} else if (gameState.cursors.up.isDown) {
             gameState.player.setVelocityY(-playerSpeed);
+			gameState.player.direction = 'up';
+			if (gameState.player.isRun) {
+				gameState.player.anims.play('porter_run_up', true);
+			} else {
+				gameState.player.anims.play('porter_walk_up', true);
+			}
         } else if (gameState.cursors.down.isDown){
             gameState.player.setVelocityY(playerSpeed);
+			gameState.player.direction = 'down';
+			if (gameState.player.isRun) {
+				gameState.player.anims.play('porter_run_down', true);
+			} else {
+				gameState.player.anims.play('porter_walk_down', true);
+			}
         }
-        else {
+		else {
 			gameState.player.setVelocityX(0);
             gameState.player.setVelocityY(0);
 		}
+		
+		if (gameState.player.body.velocity.x === 0 && gameState.player.body.velocity.y === 0) {
+			switch(gameState.player.direction){
+				case 'side':
+					gameState.player.anims.play('porter_idle_side', true);
+					break;
+				case 'up':
+					gameState.player.anims.play('porter_idle_up', true);
+					break;
+				case 'down':
+					gameState.player.anims.play('porter_idle_down', true);
+					break;
+			}
+		}
+        
+		
         //sets collision with the world bounds for the enemies - will be using this to call detection functions on the player
         gameState.birds.getChildren().forEach(bird => {
             if(bird.x === bird.width/2 || bird.y === bird.height/2 || bird.x === worldX - (bird.width/2) || bird.y === worldY - (bird.width/2)){
@@ -254,18 +301,24 @@ class GameScene extends Phaser.Scene {
         if(moveRight){
             entity.setVelocityX(birdSpeed);
             entity.setVelocityY(0)
+			entity.anims.play('bird_walk_side', true);
+			entity.flipX = true;
         }
         if(moveLeft === true){
             entity.setVelocityX(-birdSpeed);
             entity.setVelocityY(0)
+			entity.anims.play('bird_walk_side', true);
+			entity.flipX = false;
         }
         if(moveUp === true){
             entity.setVelocityY(-birdSpeed)
             entity.setVelocityX(0)
+			entity.anims.play('bird_walk_up', true);
         }
         if(moveDown === true){
             entity.setVelocityY(birdSpeed);
             entity.setVelocityX(0)
+			entity.anims.play('bird_walk_down', true);
         }
     }
     hunterAi(entity, direction){
@@ -303,18 +356,24 @@ class GameScene extends Phaser.Scene {
         if(moveRight){
             entity.setVelocityX(hunterSpeed);
             entity.setVelocityY(0)
+			entity.anims.play('hunter_walk_side', true);
+			entity.flipX = true;
         }
         if(moveLeft === true){
             entity.setVelocityX(-hunterSpeed);
             entity.setVelocityY(0)
+			entity.anims.play('hunter_walk_side', true);
+			entity.flipX = false;
         }
         if(moveUp === true){
             entity.setVelocityY(-hunterSpeed)
             entity.setVelocityX(0)
+			entity.anims.play('hunter_walk_up', true);
         }
         if(moveDown === true){
             entity.setVelocityY(hunterSpeed);
             entity.setVelocityX(0)
+			entity.anims.play('hunter_walk_down', true);
         }
     }
     worldCleanUp(){
@@ -337,4 +396,124 @@ class GameScene extends Phaser.Scene {
            x.destroy()
         })
     }
+	
+	generateAnimations() {
+		//Animations for Porter
+		this.anims.create({
+		key: 'porter_idle_down',
+		frames: this.anims.generateFrameNumbers('player', { start: 0, end: 0 }),
+		frameRate: 5,
+		repeat: 0
+		});
+		this.anims.create({
+			key: 'porter_idle_up',
+			frames: this.anims.generateFrameNumbers('player', { start: 4, end: 4 }),
+			frameRate: 5,
+			repeat: 0
+		});
+		this.anims.create({
+			key: 'porter_idle_side',
+			frames: this.anims.generateFrameNumbers('player', { start: 8, end: 8 }),
+			frameRate: 5,
+			repeat: 0
+		});
+		this.anims.create({
+			key: 'porter_walk_down',
+			frames: this.anims.generateFrameNumbers('player', { start: 0, end: 3 }),
+			frameRate: 5,
+			repeat: -1
+		});
+		this.anims.create({
+			key: 'porter_walk_up',
+			frames: this.anims.generateFrameNumbers('player', { start: 4, end: 7 }),
+			frameRate: 5,
+			repeat: -1
+		});
+		this.anims.create({
+			key: 'porter_walk_side',
+			frames: this.anims.generateFrameNumbers('player', { start: 8, end: 11 }),
+			frameRate: 5,
+			repeat: -1
+		});
+		this.anims.create({
+			key: 'porter_run_down',
+			frames: this.anims.generateFrameNumbers('player', { start: 0, end: 3 }),
+			frameRate: 10,
+			repeat: -1
+		});
+		this.anims.create({
+			key: 'porter_run_up',
+			frames: this.anims.generateFrameNumbers('player', { start: 4, end: 7 }),
+			frameRate: 10,
+			repeat: -1
+		});
+		this.anims.create({
+			key: 'porter_run_side',
+			frames: this.anims.generateFrameNumbers('player', { start: 8, end: 11 }),
+			frameRate: 10,
+			repeat: -1
+		});
+		//Animations for Bird
+		this.anims.create({
+			key: 'bird_walk_down',
+			frames: this.anims.generateFrameNumbers('bird', { start: 0, end: 3 }),
+			frameRate: 2,
+			repeat: -1
+		});
+		this.anims.create({
+			key: 'bird_walk_up',
+			frames: this.anims.generateFrameNumbers('bird', { start: 4, end: 7 }),
+			frameRate: 2,
+			repeat: -1
+		});
+		this.anims.create({
+			key: 'bird_walk_side',
+			frames: this.anims.generateFrameNumbers('bird', { start: 8, end: 11 }),
+			frameRate: 2,
+			repeat: -1
+		});
+		this.anims.create({
+			key: 'bird_alert',
+			frames: this.anims.generateFrameNumbers('bird', { start: 12, end: 15 }),
+			frameRate: 7,
+			repeat: -1
+		});
+		//Animations for Hunter
+		this.anims.create({
+			key: 'hunter_walk_down',
+			frames: this.anims.generateFrameNumbers('hunter', { start: 0, end: 3 }),
+			frameRate: 3,
+			repeat: -1
+		});
+		this.anims.create({
+			key: 'hunter_walk_up',
+			frames: this.anims.generateFrameNumbers('hunter', { start: 4, end: 7 }),
+			frameRate: 3,
+			repeat: -1
+		});
+		this.anims.create({
+			key: 'hunter_walk_side',
+			frames: this.anims.generateFrameNumbers('hunter', { start: 8, end: 11 }),
+			frameRate: 3,
+			repeat: -1
+		});
+		this.anims.create({
+			key: 'hunter_alert_down',
+			frames: this.anims.generateFrameNumbers('hunter', { start: 12, end: 13 }),
+			frameRate: 10,
+			repeat: -1
+		});
+		this.anims.create({
+			key: 'hunter_alert_up',
+			frames: this.anims.generateFrameNumbers('hunter', { start: 14, end: 15 }),
+			frameRate: 10,
+			repeat: -1
+		});
+		this.anims.create({
+			key: 'hunter_alert_side',
+			frames: this.anims.generateFrameNumbers('hunter', { start: 16, end: 17 }),
+			frameRate: 10,
+			repeat: -1
+		});
+	}
 }
