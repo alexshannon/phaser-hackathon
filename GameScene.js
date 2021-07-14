@@ -90,7 +90,6 @@ class GameScene extends Phaser.Scene {
     update(){
         //I'm not proud of this, but guarantees that we won't get worlds without packages lol
         if(packageCount === 0 || birdCount === 0 || hunterCount === 0 && finalGen === false){
-            console.log('regenning...' + packageCount + ',' + birdCount +',' + hunterCount)
             this.worldCleanUp();
             this.worldGen();
         } else {
@@ -462,31 +461,26 @@ class GameScene extends Phaser.Scene {
         let xDistance = gameState.player.x - bird.x
         let yDistance = gameState.player.y - bird.y
         if(Math.abs(xDistance) < 200 && Math.abs(yDistance) < 200){
-            console.log('Player in range of bird')
             //left
             if(gameState.alertPhase){
                 bird.anims.play('bird_alert', true)
             }
             if(bird.body.velocity.x < 0 && xDistance < 0){
-                console.log('seen left by bird')
                 bird.setVelocity(0)
                 gameState.alertPhase = true;
             }
             //right
             if(bird.body.velocity.x > 0 && xDistance > 0){
-                console.log('seen right by bird')
                 bird.setVelocity(0)
                 gameState.alertPhase = true;
             }
             //up
             if(bird.body.velocity.y < 0 && yDistance < 0){
-                console.log('seen up by bird')
                 bird.setVelocity(0)
                 gameState.alertPhase = true;
             }
             //down
             if(bird.body.velocity.y > 0 && yDistance > 0){
-                console.log('seen down by bird')
                 bird.setVelocity(0)
                 gameState.alertPhase = true;
             }
@@ -496,25 +490,20 @@ class GameScene extends Phaser.Scene {
         let xDistance = gameState.player.x - doggo.x
         let yDistance = gameState.player.y - doggo.y
         if(Math.abs(xDistance) < 200 && Math.abs(yDistance) < 200){
-            console.log('Player in range!')
             //left
             if(doggo.body.velocity.x < 0 && xDistance < 0){
-                console.log('seen left')
                 gameState.alertPhase = true;
             }
             //right
             if(doggo.body.velocity.x > 0 && xDistance > 0){
-                console.log('seen right')
                 gameState.alertPhase = true;
             }
             //up
             if(doggo.body.velocity.y < 0 && yDistance < 0){
-                console.log('seen up')
                 gameState.alertPhase = true;
             }
             //down
             if(doggo.body.velocity.y > 0 && yDistance > 0){
-                console.log('seen down')
                 gameState.alertPhase = true;
             }
         }
