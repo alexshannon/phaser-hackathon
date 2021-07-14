@@ -8,6 +8,9 @@ let collisionSet = false;
 const worldX = 1800;
 const worldY = 1200;
 
+const stepTimerReset = 60;
+let stepTimer = 2;
+
 const birdSpeed = 160;
 const hunterSpeed = 160;
 let playerSpeed;
@@ -103,6 +106,7 @@ class GameScene extends Phaser.Scene {
             delay: 0,
         })
         gameState.defeated = this.sound.add('defeated')
+        gameState.playerStep = [this.sound.add('step1'), this.sound.add('step2'), this.sound.add('step3')]
 
         //plays the music
         gameState.world_music.play();
@@ -142,8 +146,13 @@ class GameScene extends Phaser.Scene {
             this.worldGen();
         } else {
             if(finalGen === false && collisionSet === false){
-                finalGen = true
+                finalGen = true;
             }
+        }
+        if(gameState.player.body.velocity.x != 0 || gameState.player.body.velocity.y != 0){
+            this.playerFootSteps()
+        } else{
+            stepTimer = stepTimerReset
         }
         //sprinting and player speed
         if(gameState.cursors.shift.isDown){
@@ -208,7 +217,6 @@ class GameScene extends Phaser.Scene {
             }
 		}
         if(gameState.alertPhase && !alertMusicPlaying){
-            console.log('Should be playing alert music')
             gameState.alertMusic.play()
             alertMusicPlaying = true;
             gameState.world_music.stop()
@@ -258,6 +266,11 @@ class GameScene extends Phaser.Scene {
                     gameState.scoreText.setText(`Packages Left: ${packageCount}`);
                 } else {
                     victory_music.play();
+                    gameState.world_music.stop();
+                    gameState.atmos.stop();
+                    gameState.bird_attack.stop();
+                    gameState.hunter_attack.stop();
+                    gameState.alertMusic.stop();
                     this.physics.pause();
                     gameState.scoreText.setText('Good job porter! \nAll Packages have been collected.');
                 }
@@ -569,6 +582,21 @@ class GameScene extends Phaser.Scene {
             if(doggo.body.velocity.y > 0 && yDistance > 0){
                 gameState.alertPhase = true;
             }
+        }
+    }
+    playerFootSteps(){
+        stepTimer--
+        if(stepTimer <= 0 && !gameState.player.isRun){
+            let stepSelection = Math.floor(Math.random() * gameState.playerStep.length)
+            console.log(stepSelection)
+            gameState.playerStep[stepSelection].play()
+            stepTimer = stepTimerReset
+        }
+        if(stepTimer <= 0 && gameState.player.isRun){
+            let stepSelection = Math.floor(Math.random() * gameState.playerStep.length)
+            console.log(stepSelection)
+            gameState.playerStep[stepSelection].play()
+            stepTimer = (stepTimerReset * 0.64)
         }
     }
     worldCleanUp(){
