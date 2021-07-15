@@ -265,6 +265,9 @@ class GameScene extends Phaser.Scene {
                     packageCount--;
                     gameState.scoreText.setText(`Packages Left: ${packageCount}`);
                 } else {
+                    gameState.hunter_attack.stop();
+                    gameState.bird_attack.stop();
+                    gameState.alertMusic.stop();
                     victory_music.play();
                     gameState.world_music.stop();
                     gameState.atmos.stop();
