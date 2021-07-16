@@ -27,7 +27,7 @@ class GameScene extends Phaser.Scene {
         this.load.spritesheet('player', './assets/spritesheets/porter-spritesheet.png', {frameWidth: 60, frameHeight: 60})
         this.load.image('road', './assets/placeholder-textures/road.jpg')
         this.load.image('house', './assets/placeholder-textures/house.jpg')
-        this.load.image('grass', './assets/placeholder-textures/grass1.jpg')
+        this.load.image('grass', './assets/placeholder-textures/road.jpg')
         this.load.image('box', './assets/placeholder-textures/box_resize.png')
         this.load.spritesheet('bird', './assets/spritesheets/bird-spritesheet.png', {frameWidth: 60, frameHeight: 60})
         this.load.spritesheet('hunter', './assets/spritesheets/hunter-spritesheet.png', {frameWidth: 90, frameHeight: 90})

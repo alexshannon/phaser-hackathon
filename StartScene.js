@@ -19,7 +19,7 @@ class StartScene extends Phaser.Scene {
 		    loop: true,
 		    delay: 0
 		});
-		main_theme.play(config); 
+		main_theme.play(); 
 		
 		this.input.on('pointerdown', () => {
 			this.scene.stop('StartScene')
