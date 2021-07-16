@@ -57,7 +57,10 @@ class GameScene extends Phaser.Scene {
         this.worldGen();
         this.cameras.main.setBounds(0, 0, 1800, 1200);
         this.physics.world.setBounds(0, 0, 1800, 1200);
-        gameState.scoreText = this.add.text(0, 0, `Packages Left: ${packageCount}`, { fontSize: '25px', fill: '#FF00FF' }).setScrollFactor(0).setDepth(3);
+        gameState.scoreText = this.add.text(0, 0, `Packages Left: ${packageCount}`, { fontSize: '25px', fill: '#FFFFFF' }).setScrollFactor(0).setDepth(4);
+        gameState.uiSquare = this.add.graphics()
+        gameState.uiSquare.fillStyle(0x00000, .5)
+        gameState.uiSquare.fillRect(0, 0, 600, 25).setScrollFactor(0).setDepth(3);
         this.cameras.main.startFollow(gameState.player, false, 0.5, 0.5);
         //music
         gameState.world_music = this.sound.add('world_music', {
@@ -122,6 +125,7 @@ class GameScene extends Phaser.Scene {
                 gameState.alertMusic.stop()
             }
             this.physics.pause();
+            gameState.uiSquare.fillRect(0, 0, 600, 50).setScrollFactor(0).setDepth(3);
             gameState.scoreText.setText(`Demons have prevented your delivery.\nThere were only ${packageCount} packages left.`, { fontSize: '25px', fill: '#FF00FF' });
         })
         this.physics.add.collider(gameState.player, gameState.hunter, () => {
@@ -134,6 +138,7 @@ class GameScene extends Phaser.Scene {
                 gameState.alertMusic.stop()
             }
             this.physics.pause();
+            gameState.uiSquare.fillRect(0, 0, 600, 50).setScrollFactor(0).setDepth(3);
             gameState.scoreText.setText(`Demons have prevented your delivery.\nThere were only ${packageCount} packages left.`, { fontSize: '25px', fill: '#FF00FF' });
         })
         this.generateAnimations();
@@ -275,6 +280,7 @@ class GameScene extends Phaser.Scene {
                     gameState.hunter_attack.stop();
                     gameState.alertMusic.stop();
                     this.physics.pause();
+                    gameState.uiSquare.fillRect(0, 0, 600, 50).setScrollFactor(0).setDepth(3);
                     gameState.scoreText.setText('Good job porter! \nAll Packages have been collected.');
                 }
             }
